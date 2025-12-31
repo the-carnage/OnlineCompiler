@@ -4,7 +4,7 @@ import viteLogo from "/vite.svg";
 import Editor, { DiffEditor, useMonaco, loader } from "@monaco-editor/react";
 import Select from "react-select";
 
-const URL = "http://localhost:3000/compile";
+const URL = "https://onlinecompilerbackend-tlz8.onrender.com/compile";
 
 const options = [
   { value: "python", label: "Python" },
