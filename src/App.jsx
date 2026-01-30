@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import Editor, { DiffEditor, useMonaco, loader } from "@monaco-editor/react";
@@ -19,6 +19,13 @@ function App() {
   const [codes, setCodes] = useState("");
   const [inputs, setInputs] = useState("");
   const [outputs, setOutputs] = useState("");
+
+  const restart = async () => {
+    useEffect(() => {
+      fetch(URL + "/start");
+    }, [])
+  }
+  restart();
 
   const submit = async () => {
     try {
