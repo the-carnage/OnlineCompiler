@@ -1,33 +1,65 @@
 import { useState, useEffect } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import Editor, { DiffEditor, useMonaco, loader } from "@monaco-editor/react";
+import Editor from "@monaco-editor/react";
 import Select from "react-select";
+import "./App.css";
 
-const URL = "https://onlinecompilerbackend-tlz8.onrender.com/compile";
+const URL = import.meta.env.VITE_BACKEND_URL;
 
 const options = [
-  { value: "python", label: "Python" },
-  { value: "cpp", label: "C++" },
-  { value: "javascript", label: "JavaScript" },
+  { value: "python", label: "Python", defaultValue: "#Write your code here" },
+  { value: "cpp", label: "C++", defaultValue: "//Write your code here" },
+  { value: "javascript", label: "JavaScript", defaultValue: "//Write your code here" },
 ];
 
-import "./App.css";
+const themeOptions = [
+  { value: "vs-dark", label: "Dark" },
+  { value: "light", label: "Light" },
+];
+
+const customStyles = {
+  control: (provided) => ({
+    ...provided,
+    backgroundColor: 'var(--bg-tertiary)',
+    borderColor: 'var(--border-color)',
+    color: 'var(--text-primary)',
+    minHeight: '38px',
+  }),
+  menu: (provided) => ({
+    ...provided,
+    backgroundColor: 'var(--bg-tertiary)',
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isFocused ? 'var(--accent-color)' : 'var(--bg-tertiary)',
+    color: 'var(--text-primary)',
+    cursor: 'pointer',
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    color: 'var(--text-primary)',
+  }),
+  input: (provided) => ({
+    ...provided,
+    color: 'var(--text-primary)',
+  }),
+};
 
 function App() {
   const [language, setLanguage] = useState(options[0]);
   const [codes, setCodes] = useState("");
   const [inputs, setInputs] = useState("");
   const [outputs, setOutputs] = useState("");
+  const [isCompiling, setIsCompiling] = useState(false);
+  const [theme, setTheme] = useState(themeOptions[0]);
 
-  const restart = async () => {
-    useEffect(() => {
-      fetch(URL + "/start");
-    }, [])
-  }
-  restart();
+  // Fix: useEffect must be at the top level
+  useEffect(() => {
+    fetch(URL + "/start").catch(err => console.error("Warmup failed", err));
+  }, []);
 
   const submit = async () => {
+    setIsCompiling(true);
+    setOutputs("Running...");
     try {
       const response = await fetch(URL + `/${language.value}`, {
         method: "POST",
@@ -44,82 +76,97 @@ function App() {
     } catch (err) {
       console.log(err);
       setOutputs("Failed to connect to server");
+    } finally {
+      setIsCompiling(false);
     }
   };
 
   return (
-    <>
-      <div
-        style={{
-          display: "flex",
-        }}
-      >
-        <div>
-          <div>
-            <label>
-              <strong>Input</strong>
-            </label>
-            <textarea
-              name="inputBox"
-              placeholder="Enter input here..."
-              style={{
-                width: "200px",
-                height: "200px",
-                resize: "none",
-                padding: "10px",
-                fontFamily: "monospace",
-              }}
-              value={inputs}
-              onChange={(e) => setInputs(e.target.value)}
-            />
-          </div>
-          <div>
-            <label>
-              <strong>Output</strong>
-            </label>
-            <textarea
-              readOnly
-              name="Output Box"
-              placeholder="OUTPUT BOX"
-              style={{
-                width: "200px",
-                height: "200px",
-                resize: "none",
-                padding: "10px",
-                fontFamily: "monospace",
-              }}
-              value={outputs}
-              onChange={(e) => setOutputs(e.target.value)}
-            />
-          </div>
+    <div className="app-container">
+      <header className="header">
+        <div className="logo">
+          <span>&lt;/&gt;</span> Online Compiler
         </div>
-
-        <div>
-          <div style={{ display: "flex" }}>
-            <div style={{ width: "200px" }}>
-              <Select
-                value={language}
-                onChange={setLanguage}
-                options={options}
-              />
-            </div>
-
-            <div>
-              <button onClick={submit}>Submit</button>
-            </div>
+        <div className="controls">
+          <div style={{ width: "150px" }}>
+            <Select
+              value={theme}
+              onChange={setTheme}
+              options={themeOptions}
+              styles={customStyles}
+              classNamePrefix="react-select"
+              placeholder="Theme"
+            />
           </div>
+          <div style={{ width: "200px" }}>
+            <Select
+              value={language}
+              onChange={setLanguage}
+              options={options}
+              styles={customStyles}
+              classNamePrefix="react-select"
+            />
+          </div>
+          <button
+            className="run-button"
+            onClick={submit}
+            disabled={isCompiling}
+          >
+            {isCompiling ? (
+              <>
+                <div className="loading-spinner"></div>
+                Running...
+              </>
+            ) : (
+              "Run Code"
+            )}
+          </button>
+        </div>
+      </header>
 
+      <main className="main-content">
+        <div className="editor-container">
           <Editor
-            height="90vh"
-            width="90vw"
+            height="100%"
+            width="100%"
+            theme={theme.value}
             language={language.value}
-            defaultValue="#Write your code here"
+            defaultValue={language.defaultValue}
             value={codes}
             onChange={setCodes}
+            options={{
+              minimap: { enabled: false },
+              fontSize: 14,
+              scrollBeyondLastLine: false,
+              automaticLayout: true,
+            }}
           />
         </div>
-      </div>
-    </>
+
+        <div className="io-container">
+          <div className="io-panel">
+            <label className="panel-title">Input</label>
+            <textarea
+              className="io-textarea"
+              placeholder="Enter input here..."
+              value={inputs}
+              onChange={(e) => setInputs(e.target.value)}
+              spellCheck="false"
+            />
+          </div>
+          <div className="io-panel">
+            <label className="panel-title">Output</label>
+            <textarea
+              readOnly
+              className="io-textarea"
+              placeholder="Output will appear here..."
+              value={outputs}
+              spellCheck="false"
+            />
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }
 
