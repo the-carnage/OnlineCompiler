@@ -46,7 +46,7 @@ const customStyles = {
 
 function App() {
   const [language, setLanguage] = useState(options[0]);
-  const [codes, setCodes] = useState("");
+  const [codes, setCodes] = useState(options[0].defaultValue);
   const [inputs, setInputs] = useState("");
   const [outputs, setOutputs] = useState("");
   const [isCompiling, setIsCompiling] = useState(false);
@@ -56,6 +56,11 @@ function App() {
   useEffect(() => {
     fetch(URL + "/start").catch(err => console.error("Warmup failed", err));
   }, []);
+
+  const onLanguageChange = (selectedOption) => {
+    setLanguage(selectedOption);
+    setCodes(selectedOption.defaultValue);
+  };
 
   const submit = async () => {
     setIsCompiling(true);
@@ -101,7 +106,7 @@ function App() {
           <div style={{ width: "200px" }}>
             <Select
               value={language}
-              onChange={setLanguage}
+              onChange={onLanguageChange}
               options={options}
               styles={customStyles}
               classNamePrefix="react-select"
