@@ -90,7 +90,7 @@ function App() {
     <div className="app-container">
       <header className="header">
         <div className="logo">
-          <span>&lt;/&gt;</span> Online Compiler
+           Online Compiler
         </div>
         <div className="controls">
           <div style={{ width: "150px" }}>
